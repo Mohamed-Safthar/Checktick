@@ -1,0 +1,7 @@
+fastapi==0.115.2
+uvicorn[standard]==0.32.0
+sqlmodel==0.0.22
+pymysql==1.1.1
+python-dotenv==1.0.1
+passlib[argon2]==1.7.4
+asyncmy==0.2.9

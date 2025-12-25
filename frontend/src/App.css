@@ -1,0 +1,17 @@
+/* Main App Styles - Minimal overrides, most styling in index.css */
+
+/* App container */
+.App {
+  min-height: 100vh;
+}
+
+/* Loading spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
