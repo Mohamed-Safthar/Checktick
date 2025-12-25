@@ -17,7 +17,8 @@ import {
   ListTodo,
   Download,
   Upload,
-  User
+  User,
+  Lock
 } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
@@ -29,6 +30,37 @@ const Settings = () => {
   const { theme, toggleTheme } = useTheme();
 
   const [exporting, setExporting] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    current_password: "",
+    new_password: "",
+    confirm_password: ""
+  });
+  const [changingPassword, setChangingPassword] = useState(false);
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    if (passwordData.new_password !== passwordData.confirm_password) {
+      toast.error("New passwords do not match");
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      await axios.post(
+        `${API}/auth/change-password`,
+        {
+          current_password: passwordData.current_password,
+          new_password: passwordData.new_password
+        },
+        { withCredentials: true }
+      );
+      toast.success("Password updated successfully");
+      setPasswordData({ current_password: "", new_password: "", confirm_password: "" });
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to update password");
+    } finally {
+      setChangingPassword(false);
+    }
+  };
 
   const handleExport = async () => {
     setExporting(true);
@@ -198,6 +230,57 @@ const Settings = () => {
                   data-testid="dark-mode-switch"
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Change Password */}
+          <Card className="animate-slide-in">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-['Outfit']">
+                <Lock className="w-5 h-5" />
+                Change Password
+              </CardTitle>
+              <CardDescription>Update your secret password</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handlePasswordChange} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="current_password">Current Password</Label>
+                  <input
+                    id="current_password"
+                    type="password"
+                    required
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={passwordData.current_password}
+                    onChange={(e) => setPasswordData({ ...passwordData, current_password: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new_password">New Password</Label>
+                  <input
+                    id="new_password"
+                    type="password"
+                    required
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={passwordData.new_password}
+                    onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm_password">Confirm New Password</Label>
+                  <input
+                    id="confirm_password"
+                    type="password"
+                    required
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={passwordData.confirm_password}
+                    onChange={(e) => setPasswordData({ ...passwordData, confirm_password: e.target.value })}
+                  />
+                </div>
+                <Button type="submit" disabled={changingPassword} className="w-full">
+                  {changingPassword ? "Updating..." : "Update Password"}
+                </Button>
+              </form>
             </CardContent>
           </Card>
 

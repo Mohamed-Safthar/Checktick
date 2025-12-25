@@ -21,6 +21,10 @@ class RegisterRequest(BaseModel):
     email: str
     password: str
 
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
 def task_to_dict(task: Task):
     d = task.dict()
     if d.get("subtasks"):
@@ -152,6 +156,20 @@ async def logout(request: Request, response: Response, db=Depends(get_session)):
         await db.commit()
     response.delete_cookie("session_token")
     return {"message": "Logged out"}
+
+@app.post("/api/auth/change-password")
+async def change_password(data: ChangePasswordRequest, user: User = Depends(get_current_user), db=Depends(get_session)):
+    # Verify current password
+    if not verify_password(data.current_password, user.password_hash):
+        raise HTTPException(status_code=400, detail="Incorrect current password")
+    
+    # Update to new password
+    hashed_password = get_password_hash(data.new_password)
+    user.password_hash = hashed_password
+    db.add(user)
+    await db.commit()
+    
+    return {"message": "Password updated successfully"}
 
 # Task Routes
 @app.get("/api/tasks")
