@@ -18,7 +18,9 @@ import {
   ListTodo,
   Settings,
   Flame,
-  Calendar
+  Calendar,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { format } from "date-fns";
@@ -34,7 +36,9 @@ const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [todayTasks, setTodayTasks] = useState([]);
   const [upcomingTasks, setUpcomingTasks] = useState([]);
+
   const [loading, setLoading] = useState(true);
+  const [weekView, setWeekView] = useState('this_week'); // 'this_week' or 'last_week'
 
   useEffect(() => {
     // Fetch data only if user is logged in
@@ -241,15 +245,40 @@ const Dashboard = () => {
           {/* Weekly Chart - Wide */}
           <Card className="bento-item-wide card-hover animate-slide-in stagger-5">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" />
-                Weekly Progress
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4" />
+                  Weekly Progress
+                </CardTitle>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => setWeekView(weekView === 'this_week' ? 'last_week' : 'this_week')}
+                    disabled={weekView === 'last_week'}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-xs font-medium min-w-[70px] text-center">
+                    {weekView === 'this_week' ? 'This Week' : 'Last Week'}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => setWeekView(weekView === 'last_week' ? 'this_week' : 'last_week')}
+                    disabled={weekView === 'this_week'}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="h-[120px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={stats?.weekly_data || []}>
+                  <BarChart data={weekView === 'this_week' ? (stats?.this_week_data || []) : (stats?.last_week_data || [])}>
                     <XAxis
                       dataKey="day"
                       axisLine={false}
@@ -258,6 +287,7 @@ const Dashboard = () => {
                     />
                     <YAxis hide />
                     <Tooltip
+                      cursor={{ fill: 'hsl(var(--muted))', opacity: 0.4 }}
                       contentStyle={{
                         background: 'hsl(var(--card))',
                         border: '1px solid hsl(var(--border))',
