@@ -239,7 +239,7 @@ const StickyNotesPage = () => {
                     className="bg-background/50"
                 >
                     <Background color="#888" gap={16} />
-                    <Controls />
+                    <Controls className="dark:bg-black dark:text-white dark:border-white/20 [&>button]:dark:bg-black [&>button]:dark:fill-white [&>button]:dark:text-white [&>button:hover]:dark:bg-gray-800" />
                     <MiniMap />
                 </ReactFlow>
 

@@ -3,11 +3,12 @@ import { Handle, Position } from '@xyflow/react';
 import { X, Move } from 'lucide-react';
 
 const COLORS = [
-    { name: "yellow", bg: "bg-[#FFEB3B]", text: "text-black" },
-    { name: "cyan", bg: "bg-[#00BCD4]", text: "text-black" },
-    { name: "green", bg: "bg-[#4CAF50]", text: "text-white" },
-    { name: "pink", bg: "bg-[#E91E63]", text: "text-white" },
-    { name: "purple", bg: "bg-[#9C27B0]", text: "text-white" },
+    { name: "yellow", bg: "bg-[#ffd966]", text: "text-black" }, // Classic Yellow
+    { name: "orange", bg: "bg-[#ffb347]", text: "text-black" }, // Vibrant Orange
+    { name: "pink", bg: "bg-[#ff9aa2]", text: "text-black" },   // Salmon Pink
+    { name: "purple", bg: "bg-[#cf94da]", text: "text-black" }, // Soft Purple
+    { name: "cyan", bg: "bg-[#2d9bf0]", text: "text-black" },   // Bright Cyan
+    { name: "green", bg: "bg-[#b9fbc0]", text: "text-black" },  // Mint Green
 ];
 
 const StickyNoteNode = ({ data, selected }) => {
