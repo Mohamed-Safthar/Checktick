@@ -47,3 +47,15 @@ class UserSession(SQLModel, table=True):
     user_id: str
     expires_at: datetime
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class StickyNote(SQLModel, table=True):
+    note_id: str = Field(primary_key=True)
+    user_id: str = Field(foreign_key="user.user_id")
+    content: str = Field(default="")
+    color: str = Field(default="yellow")
+    x_position: int = Field(default=0)
+    y_position: int = Field(default=0)
+    z_index: int = Field(default=1)
+    is_expanded: bool = Field(default=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)

@@ -39,6 +39,7 @@ import {
   LogOut,
   LayoutDashboard,
   Settings,
+  StickyNote as StickyNoteIcon,
   GripVertical,
   Calendar as CalendarIcon,
   Trash2,

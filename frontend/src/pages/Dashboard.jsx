@@ -20,7 +20,8 @@ import {
   Flame,
   Calendar,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  StickyNote as StickyNoteIcon
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { format } from "date-fns";
@@ -101,6 +102,12 @@ const Dashboard = () => {
                 <Button variant="ghost" size="sm" data-testid="nav-tasks">
                   <ListTodo className="w-4 h-4 mr-2" />
                   Tasks
+                </Button>
+              </Link>
+              <Link to="/notes">
+                <Button variant="ghost" size="sm" data-testid="nav-notes">
+                  <StickyNoteIcon className="w-4 h-4 mr-2" />
+                  Notes
                 </Button>
               </Link>
               <Link to="/settings">
