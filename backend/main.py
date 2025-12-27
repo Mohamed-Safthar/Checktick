@@ -432,6 +432,20 @@ async def delete_note(note_id: str, user: User = Depends(get_current_user), db=D
     if not note:
         raise HTTPException(status_code=404, detail="Note not found")
         
+    # Delete associated edges first to prevent FK violation
+    edges_result = await db.exec(select(NoteEdge).where((NoteEdge.source == note_id) | (NoteEdge.target == note_id)))
+    edges = edges_result.all()
+    
+    for edge in edges:
+        await db.delete(edge)
+        # Log edge deletion
+        db.add(ActivityLog(
+            user_id=user.user_id,
+            action="delete_edge_cascade",
+            task_id=edge.edge_id,
+            task_title="Cascade Delete from Note"
+        ))
+
     await db.delete(note)
     await db.commit()
     return {"message": "Note deleted"}
