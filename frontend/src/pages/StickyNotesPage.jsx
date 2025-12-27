@@ -31,6 +31,17 @@ import {
     CheckCircle
 } from "lucide-react";
 
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "../components/ui/alert-dialog";
+
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
 const API = `${BACKEND_URL}/api`;
 
@@ -45,6 +56,13 @@ const StickyNotesPage = () => {
     // React Flow State
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+    const edgesRef = useRef([]); // To access latest edges in callbacks
+
+    // Keep edgesRef in sync
+    useEffect(() => {
+        edgesRef.current = edges;
+    }, [edges]);
+
     const [loading, setLoading] = useState(true);
 
     const saveTimeouts = useRef({});
@@ -151,15 +169,32 @@ const StickyNotesPage = () => {
             .catch(err => console.error("Failed to save position", err));
     }, []);
 
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [noteToDelete, setNoteToDelete] = useState(null);
+
     const deleteNoteHandler = async (id) => {
+        // Check if note has connections using REF
+        const hasConnections = edgesRef.current.some(e => e.source === id || e.target === id);
+        if (hasConnections) {
+            setNoteToDelete(id);
+            setDeleteDialogOpen(true);
+            return;
+        }
+        await confirmDelete(id);
+    };
+
+    const confirmDelete = async (id) => {
         try {
             await axios.delete(`${API}/notes/${id}`, { withCredentials: true });
             setNodes((nds) => nds.filter((n) => n.id !== id));
+            setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
             toast.success("Note deleted");
         } catch (error) {
             console.error("Error deleting note:", error);
             toast.error("Failed to delete note");
         }
+        setDeleteDialogOpen(false);
+        setNoteToDelete(null);
     };
 
     const addNote = async () => {
@@ -249,6 +284,21 @@ const StickyNotesPage = () => {
                         <Plus className="w-6 h-6" />
                     </Button>
                 </div>
+
+                <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Delete connected note?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This note is connected to others. Deleting it will also remove all its connections.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel onClick={() => setDeleteDialogOpen(false)}>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => confirmDelete(noteToDelete)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </div>
         </div>
     );
