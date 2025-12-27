@@ -130,6 +130,8 @@ const StickyNotesPage = () => {
             } catch (error) {
                 console.error("Failed to save edge", error);
                 toast.error("Failed to connect notes");
+                // Rollback: Remove the temporary edge
+                setEdges((eds) => eds.filter(e => e.id !== tempId));
             }
         },
         [setEdges],

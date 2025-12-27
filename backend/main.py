@@ -448,6 +448,21 @@ async def get_edges(user: User = Depends(get_current_user), db=Depends(get_sessi
 
 @app.post("/api/edges")
 async def create_edge(edge_data: EdgeCreate, user: User = Depends(get_current_user), db=Depends(get_session)):
+    # IDOR Check: Ensure both notes belong to user
+    stmt = select(StickyNote).where(
+        and_(
+            StickyNote.user_id == user.user_id,
+            (StickyNote.note_id == edge_data.source) | (StickyNote.note_id == edge_data.target)
+        )
+    )
+    result = await db.exec(stmt)
+    notes = result.all()
+    found_ids = {n.note_id for n in notes}
+    
+    # Must find both source and target (if they are different, count should be 2; if same, count 1)
+    if edge_data.source not in found_ids or edge_data.target not in found_ids:
+         raise HTTPException(status_code=403, detail="Access denied to one or both notes")
+
     new_edge = NoteEdge(
         edge_id=str(uuid.uuid4()),
         user_id=user.user_id,
@@ -455,6 +470,16 @@ async def create_edge(edge_data: EdgeCreate, user: User = Depends(get_current_us
         target=edge_data.target
     )
     db.add(new_edge)
+    
+    # Audit Log
+    log = ActivityLog(
+        user_id=user.user_id,
+        action="create_edge",
+        task_id=new_edge.edge_id, # Using ID for tracking
+        task_title="Connected Notes"
+    )
+    db.add(log)
+    
     await db.commit()
     await db.refresh(new_edge)
     return new_edge
@@ -467,5 +492,15 @@ async def delete_edge(edge_id: str, user: User = Depends(get_current_user), db=D
         raise HTTPException(status_code=404, detail="Edge not found")
     
     await db.delete(edge)
+    
+    # Audit Log
+    log = ActivityLog(
+        user_id=user.user_id,
+        action="delete_edge",
+        task_id=edge_id,
+        task_title="Removed Connection"
+    )
+    db.add(log)
+    
     await db.commit()
     return {"message": "Edge deleted"}
