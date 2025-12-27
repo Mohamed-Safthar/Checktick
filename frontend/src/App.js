@@ -74,7 +74,7 @@ function App() {
     <ThemeProvider>
       <BrowserRouter>
         <AuthProvider>
-          <div className="min-h-screen bg-background transition-theme noise-bg">
+          <div className="min-h-screen bg-background transition-theme">
             <Toaster
               position="top-right"
               toastOptions={{
