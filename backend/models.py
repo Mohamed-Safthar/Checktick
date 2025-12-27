@@ -59,3 +59,10 @@ class StickyNote(SQLModel, table=True):
     is_expanded: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class NoteEdge(SQLModel, table=True):
+    edge_id: str = Field(primary_key=True)
+    user_id: str = Field(foreign_key="user.user_id")
+    source: str = Field(foreign_key="stickynote.note_id")
+    target: str = Field(foreign_key="stickynote.note_id")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
