@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from sqlmodel import SQLModel, select, func, and_, delete
 from datetime import datetime, timedelta, timezone
 from database import init_db, get_session
-from models import User, Task, ActivityLog, PomodoroSession, UserSession, StickyNote
+from models import User, Task, ActivityLog, PomodoroSession, UserSession, StickyNote, NoteEdge
 from auth_utils import get_password_hash, verify_password
 from pydantic import BaseModel
 import uuid
@@ -435,3 +435,37 @@ async def delete_note(note_id: str, user: User = Depends(get_current_user), db=D
     await db.delete(note)
     await db.commit()
     return {"message": "Note deleted"}
+
+# Edges
+class EdgeCreate(SQLModel):
+    source: str
+    target: str
+
+@app.get("/api/edges")
+async def get_edges(user: User = Depends(get_current_user), db=Depends(get_session)):
+    result = await db.exec(select(NoteEdge).where(NoteEdge.user_id == user.user_id))
+    return result.all()
+
+@app.post("/api/edges")
+async def create_edge(edge_data: EdgeCreate, user: User = Depends(get_current_user), db=Depends(get_session)):
+    new_edge = NoteEdge(
+        edge_id=str(uuid.uuid4()),
+        user_id=user.user_id,
+        source=edge_data.source,
+        target=edge_data.target
+    )
+    db.add(new_edge)
+    await db.commit()
+    await db.refresh(new_edge)
+    return new_edge
+
+@app.delete("/api/edges/{edge_id}")
+async def delete_edge(edge_id: str, user: User = Depends(get_current_user), db=Depends(get_session)):
+    result = await db.exec(select(NoteEdge).where(and_(NoteEdge.edge_id == edge_id, NoteEdge.user_id == user.user_id)))
+    edge = result.first()
+    if not edge:
+        raise HTTPException(status_code=404, detail="Edge not found")
+    
+    await db.delete(edge)
+    await db.commit()
+    return {"message": "Edge deleted"}
