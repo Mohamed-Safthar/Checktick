@@ -15,6 +15,7 @@ import {
   LogOut,
   LayoutDashboard,
   ListTodo,
+  StickyNote as StickyNoteIcon,
   Download,
   Upload,
   User,

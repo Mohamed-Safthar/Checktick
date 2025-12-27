@@ -8,6 +8,7 @@ import Tasks from "./pages/Tasks";
 import Settings from "./pages/Settings";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import StickyNotesPage from "./pages/StickyNotesPage";
 
 // Contexts
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -53,6 +54,14 @@ const AppRouter = () => {
         element={
           <ProtectedRoute>
             <Tasks />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/notes"
+        element={
+          <ProtectedRoute>
+            <StickyNotesPage />
           </ProtectedRoute>
         }
       />

@@ -1,10 +1,11 @@
 from fastapi import FastAPI, Depends, HTTPException, Request, Response
+from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from sqlmodel import select, func, and_, delete
+from sqlmodel import SQLModel, select, func, and_, delete
 from datetime import datetime, timedelta, timezone
 from database import init_db, get_session
-from models import User, Task, ActivityLog, PomodoroSession, UserSession
+from models import User, Task, ActivityLog, PomodoroSession, UserSession, StickyNote
 from auth_utils import get_password_hash, verify_password
 from pydantic import BaseModel
 import uuid
@@ -373,3 +374,64 @@ async def complete_pomodoro(session_id: str, user: User = Depends(get_current_us
 @app.get("/api/health")
 async def health():
     return {"status": "healthy"}
+
+# Sticky Notes
+class StickyNoteCreate(SQLModel):
+    content: str = ""
+    color: str = "yellow"
+    x_position: int = 0
+    y_position: int = 0
+    z_index: int = 1
+    is_expanded: bool = True
+
+class StickyNoteUpdate(SQLModel):
+    content: Optional[str] = None
+    color: Optional[str] = None
+    x_position: Optional[int] = None
+    y_position: Optional[int] = None
+    z_index: Optional[int] = None
+    is_expanded: Optional[bool] = None
+
+@app.get("/api/notes")
+async def get_notes(user: User = Depends(get_current_user), db=Depends(get_session)):
+    result = await db.exec(select(StickyNote).where(StickyNote.user_id == user.user_id))
+    return result.all()
+
+@app.post("/api/notes")
+async def create_note(note_data: StickyNoteCreate, user: User = Depends(get_current_user), db=Depends(get_session)):
+    new_note = StickyNote(
+        note_id=str(uuid.uuid4()),
+        user_id=user.user_id,
+        **note_data.dict()
+    )
+    db.add(new_note)
+    await db.commit()
+    await db.refresh(new_note)
+    return new_note
+
+@app.put("/api/notes/{note_id}")
+async def update_note(note_id: str, note_update: StickyNoteUpdate, user: User = Depends(get_current_user), db=Depends(get_session)):
+    result = await db.exec(select(StickyNote).where(and_(StickyNote.note_id == note_id, StickyNote.user_id == user.user_id)))
+    note = result.first()
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found")
+        
+    update_data = note_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(note, key, value)
+        
+    note.updated_at = datetime.utcnow()
+    await db.commit()
+    await db.refresh(note)
+    return note
+
+@app.delete("/api/notes/{note_id}")
+async def delete_note(note_id: str, user: User = Depends(get_current_user), db=Depends(get_session)):
+    result = await db.exec(select(StickyNote).where(and_(StickyNote.note_id == note_id, StickyNote.user_id == user.user_id)))
+    note = result.first()
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found")
+        
+    await db.delete(note)
+    await db.commit()
+    return {"message": "Note deleted"}
